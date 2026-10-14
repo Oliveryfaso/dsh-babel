@@ -1,0 +1,34 @@
+name: test
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  unit:
+    name: unit tests (node ${{ matrix.node }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node: ["20", "22"]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+
+      # The unit suite is intentionally dependency-free: it exercises the
+      # normalization kernel, the command parser, the registration layer and
+      # the secret classifier without installing anything and without a
+      # network. test/mcp-smoke.mjs is excluded on purpose — it needs a real
+      # MCP server and local symlinks into a DSH installation.
+      - name: run unit tests
+        run: |
+          node test/normalize.test.mjs
+          node test/commands.test.mjs
+          node test/register.test.mjs
+          node test/secrets.test.mjs

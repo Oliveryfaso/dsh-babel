@@ -1,0 +1,12 @@
+# Normalize line endings so the same files apply on every platform.
+* text=auto eol=lf
+
+# macOS AppleDouble companions appear on non-HFS volumes (exFAT, SMB). They are
+# not part of the project and must never enter the repository.
+._* export-ignore
+.DS_Store export-ignore
+
+# Binary assets
+*.svg binary
+*.png binary
+*.webp binary

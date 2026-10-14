@@ -80,6 +80,7 @@ cordis.patch.yml      bundle patch（插入 dsh-babel 一行）
 lib/normalize.mjs     内核：方言 → IR
 lib/discover.mjs      发现：遍历文件系统找声明
 lib/preflight.mjs     预检：命令 / daemon / 密钥 / 版本
+lib/secrets.mjs       密钥解析：env 为主 + 钥匙串白名单兜底
 lib/commands.mjs      命令归一化：.md / .toml → 命令 IR
 lib/register.mjs      命令注册：ctx.commands.register + 参数替换
 lib/register-mcp.mjs  MCP 注册：连接 + createMcpToolDefinition + 工具注册
@@ -94,6 +95,7 @@ test/                 内核单测
 node test/normalize.test.mjs      # 内核单测（25 断言）
 node test/commands.test.mjs      # 命令归一化单测（21 断言）
 node test/register.test.mjs      # 命令注册单测（19 断言）
+node test/secrets.test.mjs       # 密钥解析单测（10 断言）
 node test/mcp-smoke.mjs          # MCP 注册冒烟测试（需先搭本地 symlink 到 DSH 包）
 ```
 
@@ -114,7 +116,7 @@ plugin_manager install_bundle github:yourname/dsh-babel
 - [x] 命令发现 + 归一化 + 报告（`.md` 与 `.toml`）
 - [x] 命令注册（`ctx.commands.register` + 参数替换，冒烟验证）
 - [x] 免密钥 stdio 服务器的真注册（`createMcpToolDefinition`，真实服务器冒烟验证）
-- [ ] 密钥解析（凭证分类 + 按需从环境注入，不透传全部 64 个变量）
+- [x] 密钥解析（env 为主 + 钥匙串白名单兜底 GitHub；未解析的保持缺省并如实报告）
 - [ ] 技能/子代理适配器（复用/扩展 skills-manager）
 
 ## 授权

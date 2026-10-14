@@ -18,6 +18,7 @@ import { summarize, summarizeCommands, renderText } from "./lib/report.mjs";
 import { registerCommands } from "./lib/register.mjs";
 import { registerMcpServer } from "./lib/register-mcp.mjs";
 import { preflightServer } from "./lib/preflight.mjs";
+import { materializeServer } from "./lib/secrets.mjs";
 
 export const name = "dsh-babel";
 export const inject = ["commands", "tools"];
@@ -60,12 +61,18 @@ export async function apply(ctx, config = {}) {
   // contained per server and the disposers are available for cleanup.
   const mcpRegistrations = [];
   if (registerMcp) {
-    for (const { ir, verdict } of result.servers) {
+    for (const { ir } of result.servers) {
+      // Resolve secrets (env, then whitelisted keychain) before deciding.
+      const materialized = materializeServer(ir);
+      const verdict = preflightServer(materialized);
       if (verdict.severity !== "ok") continue;
       try {
-        const r = await registerMcpServer(ctx, ir);
+        const r = await registerMcpServer(ctx, materialized);
         mcpRegistrations.push(r);
-        ctx.logger?.info?.(`dsh-babel: MCP ${ir.name} registered (${r.toolCount} tools)`);
+        const note = materialized.resolvedSecrets.length
+          ? ` (resolved: ${materialized.resolvedSecrets.map((s) => s.envVar).join(", ")})`
+          : "";
+        ctx.logger?.info?.(`dsh-babel: MCP ${ir.name} registered (${r.toolCount} tools)${note}`);
       } catch (e) {
         ctx.logger?.warn?.(`dsh-babel: MCP ${ir.name} failed: ${e.message ?? e}`);
       }

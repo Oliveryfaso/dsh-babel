@@ -1,18 +1,26 @@
 {
   "name": "dsh-babel",
-  "version": "0.2.0",
+  "version": "1.0.0",
   "type": "module",
-  "description": "Use plugins, MCP servers, skills and commands from other AI coding harnesses inside the DeepSeek Harness — by reading their existing configuration instead of asking their authors to port.",
+  "description": "Use MCP servers, plugins and slash commands from other AI coding harnesses inside the DeepSeek Harness — by reading their existing configuration instead of asking their authors to port, and reporting honestly what runs, what needs a key, and what cannot run.",
+  "icon": "./icon.svg",
   "exports": {
     ".": "./index.js",
-    "./package.json": "./package.json"
+    "./package.json": "./package.json",
+    "./locale/*": "./locale/*"
   },
   "files": [
     "index.js",
     "lib",
     "bin",
+    "locale",
+    "docs",
+    "icon.svg",
     "cordis.patch.yml",
     "README.md",
+    "README.en.md",
+    "CHANGELOG.md",
+    "THIRD_PARTY_NOTICES.md",
     "LICENSE"
   ],
   "keywords": [
@@ -37,7 +45,7 @@
     "node": ">=20"
   },
   "scripts": {
-    "test": "node test/normalize.test.mjs",
+    "test": "node test/normalize.test.mjs && node test/commands.test.mjs && node test/register.test.mjs && node test/secrets.test.mjs",
     "report": "node bin/dsh-babel.mjs"
   },
   "dependencies": {
@@ -45,6 +53,7 @@
   },
   "peerDependencies": {
     "@deepseek-ai/dsh-mcp-client": "0.2.0-rc.2",
+    "@deepseek-ai/schemastery": "~3.18.4",
     "@deepseek-ai/cordis": ">=4.0.1 <5.0.0"
   }
 }

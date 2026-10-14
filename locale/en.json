@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "dsh-babel",
+    "description": "Use MCP servers, plugins and slash commands from other AI coding harnesses inside DSH — by reading their existing configuration instead of asking their authors to port, and telling you honestly what runs, what needs a key, and what cannot run."
+  }
+}

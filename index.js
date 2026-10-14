@@ -19,20 +19,32 @@ import { registerCommands } from "./lib/register.mjs";
 import { registerMcpServer } from "./lib/register-mcp.mjs";
 import { preflightServer } from "./lib/preflight.mjs";
 import { materializeServer } from "./lib/secrets.mjs";
+import z from "@deepseek-ai/schemastery";
 
 export const name = "dsh-babel";
 export const inject = ["commands", "tools"];
 
 /**
- * Config is intentionally NOT declared as a schemastery schema in v0.2:
- * a plain object is mistaken by cordis for a schema and fails activation.
- * The shape is documented here and read defensively in apply():
- *   roots:            array of string paths or { source, path }
- *   dryRun:           boolean (default true)
- *   logReport:        boolean (default true)
- *   registerCommands: boolean (default false)
- *   registerMcp:      boolean (default false)
+ * Config schema — declared with schemastery so `Config.listConfigs` reports it
+ * and the Settings UI can render these options. A plain object would be
+ * mistaken by cordis for a schema and fail activation, so this MUST stay a
+ * schemastery schema (it exposes `~standard.validate`, which cordis calls).
+ *
+ *   roots            roots to scan; strings or { source, path } objects
+ *   dryRun           report only, register nothing (default true)
+ *   logReport        print the compatibility report to the log (default true)
+ *   registerCommands register discovered slash commands (needs dryRun: false)
+ *   registerMcp      register preflight-clean MCP servers (needs dryRun: false)
  */
+export const Config = z.object({
+  roots: z
+    .array(z.union([z.string(), z.object({ source: z.string().default("generic"), path: z.string().required() })]))
+    .default([]),
+  dryRun: z.boolean().default(true),
+  logReport: z.boolean().default(true),
+  registerCommands: z.boolean().default(false),
+  registerMcp: z.boolean().default(false),
+});
 
 /** Core pipeline shared by the plugin and the CLI runner. */
 export function run(config = {}) {

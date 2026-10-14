@@ -99,13 +99,15 @@ node test/secrets.test.mjs       # 密钥解析单测（10 断言）
 node test/mcp-smoke.mjs          # MCP 注册冒烟测试（需先搭本地 symlink 到 DSH 包）
 ```
 
-## 安装（发布后）
+## 安装
 
 ```bash
-# 从 npm
-plugin_manager install_bundle @dsh-babel/dsh-babel
-# 或从 GitHub
-plugin_manager install_bundle github:yourname/dsh-babel
+# 从 GitHub（当前可用）
+plugin_manager install_bundle github:Oliveryfaso/dsh-babel
+# 或本地目录
+plugin_manager install_bundle /绝对/路径/dsh-babel
+# 从 npm（发布后）
+plugin_manager install_bundle dsh-babel
 ```
 
 安装后默认 dry-run：在日志里打印兼容性报告，不注册任何东西。要启用注册，把配置设为 `dryRun: false` 再开 `registerCommands` / `registerMcp`（后者只注册预检通过、severity=ok 的服务器）。

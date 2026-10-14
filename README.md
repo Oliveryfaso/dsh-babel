@@ -51,7 +51,7 @@ node bin/dsh-babel.mjs --roots ~/.claude/plugins ~/.codex/plugins
 | MCP（依赖宿主运行时变量） | ⚠️ 有损 | `CODEX_*` / `CLAUDE_*` 等对方宿主注入的变量，DSH 没有，标为不可用 |
 | MCP（OAuth） | ❌ 无对应 | `oauth_resource` 等 DSH 无等价物，丢弃并告知 |
 | 技能 `skills/*/SKILL.md` | ✅ 高 | 格式统一（由 skills-manager 等已有实现覆盖） |
-| 斜杠命令 `commands/*` | 🚧 规划中 | 下一步实现 `ctx.commands.register` |
+| 斜杠命令 `commands/*` | ⚠️ 已发现/已解析 | 发现+归一化+报告已完成（`.md` 与 `.toml`）；注册 handler 待实现 |
 | Hooks | ⚠️ 有损 | DSH 仅 7 个点、仅 command handler |
 | 子代理 `agents/*` | ⚠️ 降级 | DSH 无注册接口，只能降级为技能 |
 | 插件 UI / mods | ❌ 不支持 | 必须用 DSH client 插件重写，无法移植 |
@@ -80,6 +80,7 @@ cordis.patch.yml      bundle patch（插入 dsh-babel 一行）
 lib/normalize.mjs     内核：方言 → IR
 lib/discover.mjs      发现：遍历文件系统找声明
 lib/preflight.mjs     预检：命令 / daemon / 密钥 / 版本
+lib/commands.mjs      命令归一化：.md / .toml → 命令 IR
 lib/report.mjs        报告：聚合 + 文本渲染
 bin/dsh-babel.mjs   CLI runner（本地测试用）
 test/                 内核单测
@@ -88,7 +89,8 @@ test/                 内核单测
 ## 测试
 
 ```bash
-node test/normalize.test.mjs      # 内核单测（当前 25 断言）
+node test/normalize.test.mjs      # 内核单测（25 断言）
+node test/commands.test.mjs      # 命令归一化单测（21 断言）
 ```
 
 ## 安装（发布后）
@@ -105,7 +107,8 @@ plugin_manager install_bundle github:yourname/dsh-babel
 ## 路线图
 
 - [x] MCP 发现 + 归一化 + 预检 + dry-run 报告
-- [ ] 斜杠命令导入（`ctx.commands.register`）
+- [x] 命令发现 + 归一化 + 报告（`.md` 与 `.toml`）
+- [ ] 命令注册（`ctx.commands.register` handler 接线）
 - [ ] 免密钥 stdio 服务器的真注册（用 DSH `createMcpToolDefinition`）
 - [ ] 密钥解析（凭证分类 + 按需从环境注入，不透传全部 64 个变量）
 - [ ] 技能/子代理适配器（复用/扩展 skills-manager）

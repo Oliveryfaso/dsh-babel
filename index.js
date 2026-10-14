@@ -10,9 +10,10 @@
  * kernel + preflight contract is proven in the wild.
  */
 
-import { discoverMCP, resolveRoots } from "./lib/discover.mjs";
+import { discoverMCP, discoverCommands, resolveRoots } from "./lib/discover.mjs";
 import { normalizeFile } from "./lib/normalize.mjs";
-import { summarize, renderText } from "./lib/report.mjs";
+import { normalizeCommand } from "./lib/commands.mjs";
+import { summarize, summarizeCommands, renderText } from "./lib/report.mjs";
 
 export const name = "dsh-babel";
 export const inject = [];
@@ -33,7 +34,9 @@ export function run(config = {}) {
   const roots = resolveRoots(config);
   const files = discoverMCP(roots).map((f) => normalizeFile(f.path, f.source));
   const report = summarize(files);
-  return { roots, report, text: renderText(report) };
+  const commands = discoverCommands(roots).map((f) => normalizeCommand(f.path, f.source));
+  const commandSummary = summarizeCommands(commands);
+  return { roots, report, commandSummary, text: renderText(report, commandSummary) };
 }
 
 export function apply(ctx, config = {}) {

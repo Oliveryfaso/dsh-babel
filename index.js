@@ -52,7 +52,6 @@ export async function apply(ctx, config = {}) {
   const registerMcp = config.registerMcp === true && !dryRun;
 
   const result = run(config);
-  ctx.root.dshBabel = { ...result, dryRun, generatedAt: new Date().toISOString() };
   if (logReport) ctx.logger?.info?.("dsh-babel:\n" + result.text);
 
   // Async MCP registration runs before the lifecycle effect so failures are
@@ -91,7 +90,6 @@ export async function apply(ctx, config = {}) {
     return () => {
       disposeCommands();
       for (const m of mcpRegistrations) m.dispose();
-      if (ctx.root.dshBabel) delete ctx.root.dshBabel;
     };
   }, "dsh-babel.discovery");
 }

@@ -81,6 +81,8 @@ lib/normalize.mjs     内核：方言 → IR
 lib/discover.mjs      发现：遍历文件系统找声明
 lib/preflight.mjs     预检：命令 / daemon / 密钥 / 版本
 lib/commands.mjs      命令归一化：.md / .toml → 命令 IR
+lib/register.mjs      命令注册：ctx.commands.register + 参数替换
+lib/register-mcp.mjs  MCP 注册：连接 + createMcpToolDefinition + 工具注册
 lib/report.mjs        报告：聚合 + 文本渲染
 bin/dsh-babel.mjs   CLI runner（本地测试用）
 test/                 内核单测
@@ -91,6 +93,8 @@ test/                 内核单测
 ```bash
 node test/normalize.test.mjs      # 内核单测（25 断言）
 node test/commands.test.mjs      # 命令归一化单测（21 断言）
+node test/register.test.mjs      # 命令注册单测（19 断言）
+node test/mcp-smoke.mjs          # MCP 注册冒烟测试（需先搭本地 symlink 到 DSH 包）
 ```
 
 ## 安装（发布后）
@@ -102,14 +106,14 @@ plugin_manager install_bundle @dsh-babel/dsh-babel
 plugin_manager install_bundle github:yourname/dsh-babel
 ```
 
-安装后默认 dry-run：在日志里打印兼容性报告，不注册任何东西。等内核在真实环境验证过，再打开注册。
+安装后默认 dry-run：在日志里打印兼容性报告，不注册任何东西。要启用注册，把配置设为 `dryRun: false` 再开 `registerCommands` / `registerMcp`（后者只注册预检通过、severity=ok 的服务器）。
 
 ## 路线图
 
 - [x] MCP 发现 + 归一化 + 预检 + dry-run 报告
 - [x] 命令发现 + 归一化 + 报告（`.md` 与 `.toml`）
-- [ ] 命令注册（`ctx.commands.register` handler 接线）
-- [ ] 免密钥 stdio 服务器的真注册（用 DSH `createMcpToolDefinition`）
+- [x] 命令注册（`ctx.commands.register` + 参数替换，冒烟验证）
+- [x] 免密钥 stdio 服务器的真注册（`createMcpToolDefinition`，真实服务器冒烟验证）
 - [ ] 密钥解析（凭证分类 + 按需从环境注入，不透传全部 64 个变量）
 - [ ] 技能/子代理适配器（复用/扩展 skills-manager）
 

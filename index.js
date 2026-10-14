@@ -6,8 +6,9 @@
  * preflights them against the DSH environment and reports exactly what can
  * run, what needs a credential, and what cannot run at all.
  *
- * v0.2 adds command registration behind `registerCommands: true` (dryRun=false).
- * MCP registration follows once the dependency surface is verified at install.
+ * Registration is opt-in and gated behind `dryRun: false`:
+ *   - `registerCommands: true`  -> registers valid slash commands
+ *   - `registerMcp: true`       -> registers preflight-clean (ok) MCP servers
  */
 
 import { discoverMCP, discoverCommands, resolveRoots } from "./lib/discover.mjs";
@@ -15,9 +16,11 @@ import { normalizeFile } from "./lib/normalize.mjs";
 import { normalizeCommand } from "./lib/commands.mjs";
 import { summarize, summarizeCommands, renderText } from "./lib/report.mjs";
 import { registerCommands } from "./lib/register.mjs";
+import { registerMcpServer } from "./lib/register-mcp.mjs";
+import { preflightServer } from "./lib/preflight.mjs";
 
 export const name = "dsh-babel";
-export const inject = ["commands"];
+export const inject = ["commands", "tools"];
 
 /** Config schema — kept simple and self-describing for Config.listConfigs. */
 export const Config = {
@@ -29,6 +32,7 @@ export const Config = {
   dryRun: { type: "boolean", default: true },
   logReport: { type: "boolean", default: true },
   registerCommands: { type: "boolean", default: false },
+  registerMcp: { type: "boolean", default: false },
 };
 
 /** Core pipeline shared by the plugin and the CLI runner. */
@@ -38,31 +42,50 @@ export function run(config = {}) {
   const report = summarize(files);
   const commands = discoverCommands(roots).map((f) => normalizeCommand(f.path, f.source));
   const commandSummary = summarizeCommands(commands);
-  return { roots, report, commandSummary, text: renderText(report, commandSummary) };
+  const servers = files.flatMap((f) => (f.error ? [] : f.servers)).map((ir) => ({ ir, verdict: preflightServer(ir) }));
+  return { roots, report, commandSummary, servers, text: renderText(report, commandSummary) };
 }
 
-export function apply(ctx, config = {}) {
+export async function apply(ctx, config = {}) {
   const dryRun = config.dryRun !== false;
   const logReport = config.logReport !== false;
+  const registerCmd = config.registerCommands === true && !dryRun;
+  const registerMcp = config.registerMcp === true && !dryRun;
+
+  const result = run(config);
+  ctx.root.dshBabel = { ...result, dryRun, generatedAt: new Date().toISOString() };
+  if (logReport) ctx.logger?.info?.("dsh-babel:\n" + result.text);
+
+  // Async MCP registration runs before the lifecycle effect so failures are
+  // contained per server and the disposers are available for cleanup.
+  const mcpRegistrations = [];
+  if (registerMcp) {
+    for (const { ir, verdict } of result.servers) {
+      if (verdict.severity !== "ok") continue;
+      try {
+        const r = await registerMcpServer(ctx, ir);
+        mcpRegistrations.push(r);
+        ctx.logger?.info?.(`dsh-babel: MCP ${ir.name} registered (${r.toolCount} tools)`);
+      } catch (e) {
+        ctx.logger?.warn?.(`dsh-babel: MCP ${ir.name} failed: ${e.message ?? e}`);
+      }
+    }
+  }
 
   ctx.effect(() => {
-    const result = run(config);
-    // Publish the report for inspection (`cordis_inspect_query`).
-    ctx.root.dshBabel = { ...result, dryRun, generatedAt: new Date().toISOString() };
-    if (logReport) ctx.logger?.info?.("dsh-babel:\n" + result.text);
-
     let disposeCommands = () => {};
-    const registerCmd = config.registerCommands === true && !dryRun;
     if (registerCmd) {
       const r = registerCommands(ctx, result.commandSummary.commands);
       disposeCommands = r.dispose;
       ctx.logger?.info?.(`dsh-babel: registered ${r.names.length} commands${r.skipped.length ? ` (skipped ${r.skipped.length}: ${r.skipped.join(", ")})` : ""}`);
-    } else if (dryRun) {
+    }
+    if (dryRun) {
       ctx.logger?.info?.("dsh-babel: dryRun=true — discovered and preflighted only; nothing registered");
     }
 
     return () => {
       disposeCommands();
+      for (const m of mcpRegistrations) m.dispose();
       if (ctx.root.dshBabel) delete ctx.root.dshBabel;
     };
   }, "dsh-babel.discovery");

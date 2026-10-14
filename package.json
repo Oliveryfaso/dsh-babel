@@ -38,5 +38,12 @@
   "scripts": {
     "test": "node test/normalize.test.mjs",
     "report": "node bin/dsh-babel.mjs"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/client": "2.0.0"
+  },
+  "peerDependencies": {
+    "@deepseek-ai/dsh-mcp-client": "0.2.0-rc.2",
+    "@deepseek-ai/cordis": ">=4.0.1 <5.0.0"
   }
 }

@@ -1,0 +1,10 @@
+# Inserts the interop plugin as one Host row. Host-only: no client/UI entry.
+- insert:
+    - id: dsh-babel
+      name: 'dsh-babel'
+      config:
+        # Roots are scanned for external plugin manifests and .mcp.json files.
+        # Defaults resolve from $HOME; override to narrow or extend discovery.
+        roots: []
+        # Report-only mode: discover and explain, register nothing.
+        dryRun: true

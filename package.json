@@ -1,0 +1,42 @@
+{
+  "name": "dsh-babel",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Use plugins, MCP servers, skills and commands from other AI coding harnesses inside the DeepSeek Harness — by reading their existing configuration instead of asking their authors to port.",
+  "exports": {
+    ".": "./index.js",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "index.js",
+    "lib",
+    "bin",
+    "cordis.patch.yml",
+    "README.md"
+  ],
+  "keywords": [
+    "dsh",
+    "deepseek-harness",
+    "mcp",
+    "interop",
+    "claude-code",
+    "codex",
+    "plugin"
+  ],
+  "license": "MIT",
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  },
+  "bin": {
+    "dsh-babel": "./bin/dsh-babel.mjs"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "test": "node test/normalize.test.mjs",
+    "report": "node bin/dsh-babel.mjs"
+  }
+}

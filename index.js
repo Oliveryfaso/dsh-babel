@@ -6,17 +6,18 @@
  * preflights them against the DSH environment and reports exactly what can
  * run, what needs a credential, and what cannot run at all.
  *
- * v0.1 ships dry-run reporting first; tool/skill registration follows once the
- * kernel + preflight contract is proven in the wild.
+ * v0.2 adds command registration behind `registerCommands: true` (dryRun=false).
+ * MCP registration follows once the dependency surface is verified at install.
  */
 
 import { discoverMCP, discoverCommands, resolveRoots } from "./lib/discover.mjs";
 import { normalizeFile } from "./lib/normalize.mjs";
 import { normalizeCommand } from "./lib/commands.mjs";
 import { summarize, summarizeCommands, renderText } from "./lib/report.mjs";
+import { registerCommands } from "./lib/register.mjs";
 
 export const name = "dsh-babel";
-export const inject = [];
+export const inject = ["commands"];
 
 /** Config schema — kept simple and self-describing for Config.listConfigs. */
 export const Config = {
@@ -27,6 +28,7 @@ export const Config = {
   },
   dryRun: { type: "boolean", default: true },
   logReport: { type: "boolean", default: true },
+  registerCommands: { type: "boolean", default: false },
 };
 
 /** Core pipeline shared by the plugin and the CLI runner. */
@@ -45,12 +47,22 @@ export function apply(ctx, config = {}) {
 
   ctx.effect(() => {
     const result = run(config);
-    // Publish the report for inspection (`cordis_inspect_query`) without
-    // registering any runtime resources in dry-run mode.
+    // Publish the report for inspection (`cordis_inspect_query`).
     ctx.root.dshBabel = { ...result, dryRun, generatedAt: new Date().toISOString() };
     if (logReport) ctx.logger?.info?.("dsh-babel:\n" + result.text);
-    if (dryRun) ctx.logger?.info?.("dsh-babel: dryRun=true — discovered and preflighted only; nothing registered");
+
+    let disposeCommands = () => {};
+    const registerCmd = config.registerCommands === true && !dryRun;
+    if (registerCmd) {
+      const r = registerCommands(ctx, result.commandSummary.commands);
+      disposeCommands = r.dispose;
+      ctx.logger?.info?.(`dsh-babel: registered ${r.names.length} commands${r.skipped.length ? ` (skipped ${r.skipped.length}: ${r.skipped.join(", ")})` : ""}`);
+    } else if (dryRun) {
+      ctx.logger?.info?.("dsh-babel: dryRun=true — discovered and preflighted only; nothing registered");
+    }
+
     return () => {
+      disposeCommands();
       if (ctx.root.dshBabel) delete ctx.root.dshBabel;
     };
   }, "dsh-babel.discovery");

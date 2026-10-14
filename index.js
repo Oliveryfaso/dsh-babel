@@ -23,18 +23,16 @@ import { materializeServer } from "./lib/secrets.mjs";
 export const name = "dsh-babel";
 export const inject = ["commands", "tools"];
 
-/** Config schema — kept simple and self-describing for Config.listConfigs. */
-export const Config = {
-  roots: {
-    type: "array",
-    items: { oneOf: [{ type: "string" }, { type: "object", properties: { source: { type: "string" }, path: { type: "string" } }, required: ["path"] }] },
-    default: [],
-  },
-  dryRun: { type: "boolean", default: true },
-  logReport: { type: "boolean", default: true },
-  registerCommands: { type: "boolean", default: false },
-  registerMcp: { type: "boolean", default: false },
-};
+/**
+ * Config is intentionally NOT declared as a schemastery schema in v0.2:
+ * a plain object is mistaken by cordis for a schema and fails activation.
+ * The shape is documented here and read defensively in apply():
+ *   roots:            array of string paths or { source, path }
+ *   dryRun:           boolean (default true)
+ *   logReport:        boolean (default true)
+ *   registerCommands: boolean (default false)
+ *   registerMcp:      boolean (default false)
+ */
 
 /** Core pipeline shared by the plugin and the CLI runner. */
 export function run(config = {}) {

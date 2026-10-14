@@ -8,6 +8,7 @@
 
 [![简体中文](https://img.shields.io/badge/lang-%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87-red.svg)](README.md) [![English](https://img.shields.io/badge/lang-English-blue.svg)](README.en.md)
 
+[![test](https://github.com/Oliveryfaso/dsh-babel/actions/workflows/test.yml/badge.svg)](https://github.com/Oliveryfaso/dsh-babel/actions/workflows/test.yml)
 [![license](https://img.shields.io/badge/license-MIT-2EA44F?style=flat)](LICENSE)
 [![GitHub stars](https://img.shields.io/github/stars/Oliveryfaso/dsh-babel?style=flat&label=%E2%98%85)](https://github.com/Oliveryfaso/dsh-babel)
 [![DSH plugin](https://img.shields.io/badge/DSH-plugin-0f766e.svg)](https://github.com/Oliveryfaso/dsh-babel)
